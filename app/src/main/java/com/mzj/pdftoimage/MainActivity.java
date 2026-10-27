@@ -168,7 +168,9 @@ public class MainActivity extends AppCompatActivity {
         int scale = getScale();
 
         setBusy(true);
-        executor.execute(() -> doConvert(start, end, png, scale));
+        final int from = start;
+        final int to = end;
+        executor.execute(() -> doConvert(from, to, png, scale));
     }
 
     private int getScale() {
