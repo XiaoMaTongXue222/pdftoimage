@@ -191,7 +191,76 @@
                 android:layout_marginStart="10dp"
                 android:text="超清 3x"
                 android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/rb4x"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:text="极致 4x"
+                android:textSize="14sp" />
         </RadioGroup>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="图像增强"
+            android:textColor="#1565C0"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <RadioGroup
+            android:id="@+id/rgEnhance"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <RadioButton
+                android:id="@+id/rbEnhNone"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="原样输出"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/rbEnhDoc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="文档增强（去灰底、提对比，扫描件推荐）"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/rbEnhSharp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="强力锐化（文字边缘更锐利）"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/rbEnhMono"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="黑白二值（最清晰、体积最小）"
+                android:textSize="14sp" />
+        </RadioGroup>
+
+        <CheckBox
+            android:id="@+id/cbWatermark"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="淡化浅色水印（浅灰/半透明背景水印有效）"
+            android:textSize="14sp" />
+
+        <CheckBox
+            android:id="@+id/cbSuper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="超采样渲染（文字型 PDF 更平滑）"
+            android:textSize="14sp" />
 
         <Button
             android:id="@+id/btnConvert"
@@ -231,7 +300,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:text="转换结果保存在相册目录 Pictures/PdfToImage，完全本地运行，无需联网，不限次数。"
+            android:text="转换结果保存在相册目录 Pictures/PdfToImage，完全本地运行，无需联网，不限次数。\n若原 PDF 本身是模糊扫描件，任何软件都无法还原丢失的细节，增强只能改善观感；浅灰水印可用「淡化浅色水印」压制，彩色或压在文字上的水印无法去除。"
             android:textColor="#999999"
             android:textSize="12sp" />
 
