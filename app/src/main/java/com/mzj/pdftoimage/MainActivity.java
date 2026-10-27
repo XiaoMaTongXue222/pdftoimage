@@ -22,6 +22,7 @@ import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.RadioGroup;
@@ -43,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "PdfToImage";
     private static final String SAVE_DIR = "PdfToImage";
     private static final int REQ_WRITE = 100;
+    private static final int MAX_RENDER_PIXELS = 10_000_000;
+    private static final int WATERMARK_WHITE_CUT = 215;
 
     private Uri pdfUri;
     private String baseName = "pdf";
@@ -166,11 +169,14 @@ public class MainActivity extends AppCompatActivity {
         RadioGroup rgFormat = findViewById(R.id.rgFormat);
         boolean png = rgFormat.getCheckedRadioButtonId() == R.id.rbPng;
         int scale = getScale();
+        ImageEnhance.Mode mode = getEnhanceMode();
+        boolean removeWatermark = ((CheckBox) findViewById(R.id.cbWatermark)).isChecked();
+        boolean superSample = ((CheckBox) findViewById(R.id.cbSuper)).isChecked();
 
         setBusy(true);
         final int from = start;
         final int to = end;
-        executor.execute(() -> doConvert(from, to, png, scale));
+        executor.execute(() -> doConvert(from, to, png, scale, mode, removeWatermark, superSample));
     }
 
     private int getScale() {
@@ -179,7 +185,28 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.rb1x) {
             return 1;
         }
-        return id == R.id.rb2x ? 2 : 3;
+        if (id == R.id.rb2x) {
+            return 2;
+        }
+        if (id == R.id.rb3x) {
+            return 3;
+        }
+        return 4;
+    }
+
+    private ImageEnhance.Mode getEnhanceMode() {
+        RadioGroup rg = findViewById(R.id.rgEnhance);
+        int id = rg.getCheckedRadioButtonId();
+        if (id == R.id.rbEnhDoc) {
+            return ImageEnhance.Mode.DOC;
+        }
+        if (id == R.id.rbEnhSharp) {
+            return ImageEnhance.Mode.SHARP;
+        }
+        if (id == R.id.rbEnhMono) {
+            return ImageEnhance.Mode.MONO;
+        }
+        return ImageEnhance.Mode.NONE;
     }
 
     private int parseInt(String text, int def) {
@@ -189,24 +216,45 @@ public class MainActivity extends AppCompatActivity {
         return Integer.parseInt(text.trim());
     }
 
-    private void doConvert(int start, int end, boolean png, int scale) {
+    private void doConvert(int start, int end, boolean png, int scale,
+                           ImageEnhance.Mode mode, boolean removeWatermark, boolean superSample) {
         int total = end - start + 1;
         int done = 0;
         try (ParcelFileDescriptor fd = getContentResolver().openFileDescriptor(pdfUri, "r");
              PdfRenderer renderer = new PdfRenderer(fd)) {
             for (int index = start - 1; index <= end - 1; index++) {
                 PdfRenderer.Page page = renderer.openPage(index);
-                int width = page.getWidth() * scale;
-                int height = page.getHeight() * scale;
-                Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(bitmap);
+                int baseW = page.getWidth();
+                int baseH = page.getHeight();
+
+                int renderScale = scale * (superSample ? 2 : 1);
+                while (renderScale > 1
+                        && (long) baseW * renderScale * baseH * renderScale > MAX_RENDER_PIXELS) {
+                    renderScale--;
+                }
+
+                Bitmap rendered = Bitmap.createBitmap(baseW * renderScale, baseH * renderScale,
+                        Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(rendered);
                 canvas.drawColor(Color.WHITE);
-                page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                page.render(rendered, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+                page.close();
+
+                Bitmap target = rendered;
+                if (renderScale > scale) {
+                    target = Bitmap.createScaledBitmap(rendered, baseW * scale, baseH * scale, true);
+                    rendered.recycle();
+                }
+
+                Bitmap result = ImageEnhance.apply(target, mode, removeWatermark, WATERMARK_WHITE_CUT);
+                if (result != target) {
+                    target.recycle();
+                }
+
                 String fileName = baseName + "_" + String.format("%03d", index + 1)
                         + (png ? ".png" : ".jpg");
-                saveBitmap(bitmap, fileName, png);
-                bitmap.recycle();
-                page.close();
+                saveBitmap(result, fileName, png);
+                result.recycle();
                 done++;
                 final int cur = done;
                 mainHandler.post(() -> updateProgress(cur, total));
