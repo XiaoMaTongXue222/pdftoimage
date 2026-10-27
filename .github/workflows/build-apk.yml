@@ -1,0 +1,57 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: |
+          yes | sdkmanager --licenses > /dev/null
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Install Gradle 8.7
+        run: |
+          curl -sL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q /tmp/gradle.zip -d /opt
+          echo "/opt/gradle-8.7/bin" >> "$GITHUB_PATH"
+
+      - name: Create signing key
+        run: |
+          keytool -genkeypair -v -keystore release.jks -alias pdftoimage \
+            -keyalg RSA -keysize 2048 -validity 10950 \
+            -storepass pdftoimage -keypass pdftoimage \
+            -dname "CN=PdfToImage, OU=Tool, O=PdfToImage, C=CN"
+
+      - name: Build release APK
+        run: |
+          gradle assembleRelease --no-daemon --stacktrace \
+            -PKS_FILE=../release.jks \
+            -PKS_PASS=pdftoimage \
+            -PK_ALIAS=pdftoimage \
+            -PK_PASS=pdftoimage
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdftoimage-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
