@@ -33,6 +33,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -78,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        PDFBoxResourceLoader.init(getApplicationContext());
         setContentView(R.layout.activity_main);
 
         tvFile = findViewById(R.id.tvFile);
@@ -203,9 +206,20 @@ public class MainActivity extends AppCompatActivity {
 
     private void doConvert(int start, int end, boolean png, int scale,
                            ImageEnhance.Mode mode, boolean removeWatermark, boolean superSample) {
+        File cleanPdf = null;
+        try {
+            cleanPdf = PdfWatermark.strip(this, pdfUri);
+        } catch (Exception e) {
+            Log.w(TAG, "pdf object parse failed, fallback to pixel fade", e);
+        }
+        final boolean objectRemoved = cleanPdf != null;
+        final boolean pixelFade = removeWatermark && !objectRemoved;
+
         int total = end - start + 1;
         int done = 0;
-        try (ParcelFileDescriptor fd = getContentResolver().openFileDescriptor(pdfUri, "r");
+        try (ParcelFileDescriptor fd = objectRemoved
+                ? ParcelFileDescriptor.open(cleanPdf, ParcelFileDescriptor.MODE_READ_ONLY)
+                : getContentResolver().openFileDescriptor(pdfUri, "r");
              PdfRenderer renderer = new PdfRenderer(fd)) {
             for (int index = start - 1; index <= end - 1; index++) {
                 PdfRenderer.Page page = renderer.openPage(index);
@@ -231,9 +245,9 @@ public class MainActivity extends AppCompatActivity {
                     rendered.recycle();
                 }
 
-                int whiteCut = removeWatermark && ImageEnhance.detectWatermark(target)
+                int whiteCut = pixelFade && ImageEnhance.detectWatermark(target)
                         ? WATERMARK_STRONG_CUT : WATERMARK_WHITE_CUT;
-                Bitmap result = ImageEnhance.apply(target, mode, removeWatermark, whiteCut);
+                Bitmap result = ImageEnhance.apply(target, mode, pixelFade, whiteCut);
                 if (result != target) {
                     target.recycle();
                 }
@@ -254,6 +268,10 @@ public class MainActivity extends AppCompatActivity {
                 tvProgress.setText("转换失败：" + msg);
             });
             return;
+        } finally {
+            if (cleanPdf != null) {
+                cleanPdf.delete();
+            }
         }
         final int ok = done;
         mainHandler.post(() -> {

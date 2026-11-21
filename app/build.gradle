@@ -12,6 +12,7 @@ android {
         targetSdk 34
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
 
     signingConfigs {
@@ -45,6 +46,8 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
+    // Apache-2.0，编译期打进 APK，运行时完全本地，无网络、无授权、无次数限制。
+    implementation 'com.tom-roush:pdfbox-android:2.0.27.0'
 }
 
 configurations.configureEach {
