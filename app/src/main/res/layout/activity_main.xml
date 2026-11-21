@@ -125,86 +125,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="输出格式"
-            android:textColor="#1565C0"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <RadioGroup
-            android:id="@+id/rgFormat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <RadioButton
-                android:id="@+id/rbPng"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"
-                android:text="PNG（无损）"
-                android:textSize="14sp" />
-
-            <RadioButton
-                android:id="@+id/rbJpg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:text="JPG（体积小）"
-                android:textSize="14sp" />
-        </RadioGroup>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="输出清晰度"
-            android:textColor="#1565C0"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <RadioGroup
-            android:id="@+id/rgScale"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <RadioButton
-                android:id="@+id/rb1x"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="标准 1x"
-                android:textSize="14sp" />
-
-            <RadioButton
-                android:id="@+id/rb2x"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:checked="true"
-                android:text="高清 2x"
-                android:textSize="14sp" />
-
-            <RadioButton
-                android:id="@+id/rb3x"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="超清 3x"
-                android:textSize="14sp" />
-
-            <RadioButton
-                android:id="@+id/rb4x"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:text="极致 4x"
-                android:textSize="14sp" />
-        </RadioGroup>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
             android:text="图像增强"
             android:textColor="#1565C0"
             android:textSize="14sp"
@@ -251,6 +171,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:checked="true"
             android:text="淡化浅色水印（浅灰/半透明背景水印有效）"
             android:textSize="14sp" />
 

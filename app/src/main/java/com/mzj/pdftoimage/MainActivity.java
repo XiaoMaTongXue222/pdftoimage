@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQ_WRITE = 100;
     private static final int MAX_RENDER_PIXELS = 10_000_000;
     private static final int WATERMARK_WHITE_CUT = 215;
+    private static final int WATERMARK_STRONG_CUT = 175;
 
     private Uri pdfUri;
     private String baseName = "pdf";
@@ -166,9 +167,8 @@ public class MainActivity extends AppCompatActivity {
         start = Math.max(1, Math.min(start, pageCount));
         end = Math.max(start, Math.min(end, pageCount));
 
-        RadioGroup rgFormat = findViewById(R.id.rgFormat);
-        boolean png = rgFormat.getCheckedRadioButtonId() == R.id.rbPng;
-        int scale = getScale();
+        boolean png = true;
+        int scale = 4;
         ImageEnhance.Mode mode = getEnhanceMode();
         boolean removeWatermark = ((CheckBox) findViewById(R.id.cbWatermark)).isChecked();
         boolean superSample = ((CheckBox) findViewById(R.id.cbSuper)).isChecked();
@@ -177,21 +177,6 @@ public class MainActivity extends AppCompatActivity {
         final int from = start;
         final int to = end;
         executor.execute(() -> doConvert(from, to, png, scale, mode, removeWatermark, superSample));
-    }
-
-    private int getScale() {
-        RadioGroup rgScale = findViewById(R.id.rgScale);
-        int id = rgScale.getCheckedRadioButtonId();
-        if (id == R.id.rb1x) {
-            return 1;
-        }
-        if (id == R.id.rb2x) {
-            return 2;
-        }
-        if (id == R.id.rb3x) {
-            return 3;
-        }
-        return 4;
     }
 
     private ImageEnhance.Mode getEnhanceMode() {
@@ -246,7 +231,9 @@ public class MainActivity extends AppCompatActivity {
                     rendered.recycle();
                 }
 
-                Bitmap result = ImageEnhance.apply(target, mode, removeWatermark, WATERMARK_WHITE_CUT);
+                int whiteCut = removeWatermark && ImageEnhance.detectWatermark(target)
+                        ? WATERMARK_STRONG_CUT : WATERMARK_WHITE_CUT;
+                Bitmap result = ImageEnhance.apply(target, mode, removeWatermark, whiteCut);
                 if (result != target) {
                     target.recycle();
                 }

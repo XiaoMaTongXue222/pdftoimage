@@ -75,6 +75,31 @@ final class ImageEnhance {
         return dst;
     }
 
+    /**
+     * 判断页面是否带浅色水印：按步长采样，统计"浅灰但非纯白"像素占比。
+     * 白底黑字的正常页面该区间占比极低；平铺/居中的浅色水印会形成成片浅灰。
+     */
+    static boolean detectWatermark(Bitmap src) {
+        int w = src.getWidth();
+        int h = src.getHeight();
+        int step = Math.max(1, (int) Math.sqrt((double) w * h / 40000));
+        int light = 0;
+        int samples = 0;
+        for (int y = 0; y < h; y += step) {
+            for (int x = 0; x < w; x += step) {
+                int c = src.getPixel(x, y);
+                int lum = ((c >> 16 & 0xFF) * 299
+                        + (c >> 8 & 0xFF) * 587
+                        + (c & 0xFF) * 114) / 1000;
+                if (lum >= 180 && lum <= 248) {
+                    light++;
+                }
+                samples++;
+            }
+        }
+        return light * 100 / samples >= 3;
+    }
+
     private static int radius(int w, int h) {
         int r = Math.max(w, h) / 60;
         return Math.max(4, Math.min(r, 24));
